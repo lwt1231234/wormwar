@@ -36,3 +36,20 @@ function createunit(unitname)
 
 	unit:SetContext("name", unitname, 0)
 end
+
+function createbaby(playerid)
+	local followed_unit=Player_Stats[playerid]['group'][Player_Stats[playerid]['group']['group_pointer']]
+	local chaoxiang=followed_unit:GetForwardVector()
+	local position=followed_unit:GetAbsOrigin()
+	local newposition = position
+	local new_unit=CreateUnitByName("baby", newposition, true, nil, nil, followed_unit:GetTeam())
+	new_unit:SetForwardVector(chaoxiang)
+	GameRules:GetGameModeEntity():SetContextThink(DoUniqueString("1"),
+		function ()
+			new_unit:MoveToNPC(followed_unit)
+			return 0.2
+		end
+		, 0)
+	Player_Stats[playerid]['group']['group_pointer']=Player_Stats[playerid]['group']['group_pointer']+1
+	Player_Stats[playerid]['group'][Player_Stats[playerid]['group']['group_pointer']]=new_unit
+end

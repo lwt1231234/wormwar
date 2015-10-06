@@ -6,5 +6,7 @@
 		"Models"					"models/heroes/nerubian_assassin/nerubian_assassin.vmdl"
 		
 		"StatusHealth"				"1"		//基础血量
+
+		"MovementTrunRate"			"0.1"		//转身速度
 	}
 }

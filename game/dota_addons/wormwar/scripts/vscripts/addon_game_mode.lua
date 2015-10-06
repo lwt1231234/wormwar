@@ -66,17 +66,16 @@ function CWormWar:InitGameMode()
 	print( "Template addon is loaded." )
 	GameRules:GetGameModeEntity():SetThink( "OnThink", self, "GlobalThink", 2 )
 	ListenToGameEvent("entity_killed", Dynamic_Wrap(CWormWar, "OnEntityKilled"), self)
-end
+	ListenToGameEvent("npc_spawned", Dynamic_Wrap(CWormWar, "OnNPCSpawned"), self)
 
--- Evaluate the state of the game
-function CWormWar:OnThink()
 	if flag_init_player_stats==0 then
 		init_player_stats()
 		flag_init_player_stats=1
 	end
+end
 
-
-
+-- Evaluate the state of the game
+function CWormWar:OnThink()
 	if GameRules:State_Get() == DOTA_GAMERULES_STATE_GAME_IN_PROGRESS then
 		--print( "Template addon script is running." )
 	elseif GameRules:State_Get() >= DOTA_GAMERULES_STATE_POST_GAME then
@@ -104,3 +103,50 @@ function CWormWar:OnEntityKilled(keys)--单位死亡响应
 
 end
 
+function CWormWar:OnNPCSpawned(keys)--单位创建响应
+	local unit = EntIndexToHScript(keys.entindex)
+	if unit:IsHero() then
+		local playerid = unit:GetPlayerOwnerID()
+		Player_Stats[playerid]['group']={}
+		Player_Stats[playerid]['group']['group_pointer'] = 1
+		Player_Stats[playerid]['group'][Player_Stats[playerid]['group']['group_pointer']] = unit
+
+		GameRules:GetGameModeEntity():SetContextThink(DoUniqueString("1"),
+			function ()
+				local chaoxiang=unit:GetForwardVector()
+				local truechaoxiang=chaoxiang:Normalized()
+				local position = unit:GetAbsOrigin()
+				unit:MoveToPosition(position+truechaoxiang*500)
+
+				local aroundit=FindUnitsInRadius(DOTA_TEAM_NEUTRALS, 
+												position, 
+												nil, 
+												100,
+					                            DOTA_UNIT_TARGET_TEAM_FRIENDLY,
+					                            DOTA_UNIT_TARGET_ALL,
+					                            DOTA_UNIT_TARGET_FLAG_NONE,
+					                            FIND_ANY_ORDER,
+					                            false)
+
+				for k,v in pairs(aroundit) do
+					local label = v:GetContext("name")
+					if label then
+						--print(label)
+						if label == "sheep" then
+							v:ForceKill(true)
+							createbaby(playerid)
+						end
+						if label == "cow" then
+							v:ForceKill(true)
+							createbaby(playerid)
+							createbaby(playerid)
+						end
+					end
+				end
+
+
+				return 0.5
+			end
+			, 0)
+	end
+end
